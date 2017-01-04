@@ -2,6 +2,9 @@
 
 #include <pthread.h>
 
+#define FALSE (0)
+#define TRUE (1)
+
 typedef struct _TestThread TestThread;
 
 typedef enum{
@@ -36,46 +39,42 @@ struct _TestThread
   volatile TestThread *prev;
 
   volatile TestThread *children;
+
+  void (*run)(TestThread *test_thread);
 };
 
 #define test_atomic_uint_get(atomic)					\
-  (G_GNUC_EXTENSION ({							\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (unsinged int));	\
+  (__extension__ ({							\
       (void) (0 ? *(atomic) ^ *(atomic) : 0);				\
       __sync_synchronize ();						\
-      (unsinged int) *(atomic);						\
+      (unsigned int) *(atomic);						\
     }))
 #define test_atomic_uint_set(atomic, newval)				\
-  (G_GNUC_EXTENSION ({							\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (unsinged int));	\
+  (__extension__ ({							\
       (void) (0 ? *(atomic) ^ (newval) : 0);				\
       *(atomic) = (newval);						\
       __sync_synchronize ();						\
     }))
 
 #define test_atomic_pointer_get(atomic)				\
-  (G_GNUC_EXTENSION ({						\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (void *));	\
+  (__extension__ ({						\
       __sync_synchronize ();					\
       (void *) *(atomic);					\
     }))
 #define test_atomic_pointer_set(atomic, newval)			\
-  (G_GNUC_EXTENSION ({						\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (void *));	\
+  (__extension__ ({						\
       (void) (0 ? (void *) *(atomic) : 0);			\
       *(atomic) = (__typeof__ (*(atomic))) (gsize) (newval);	\
       __sync_synchronize ();					\
     }))
 
 #define test_atomic_uint_and(atomic, val)				\
-  (G_GNUC_EXTENSION ({							\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (unsinged int));	\
+  (__extension__ ({							\
       (void) (0 ? *(atomic) ^ (val) : 0);				\
-      (guint) __sync_fetch_and_and ((atomic), (val));			\
+      (unsigned int) __sync_fetch_and_and ((atomic), (val));			\
     }))
 #define test_atomic_uint_or(atomic, val)				\
-  (G_GNUC_EXTENSION ({							\
-      G_STATIC_ASSERT (sizeof *(atomic) == sizeof (unsinged int));	\
+  (__extension__ ({							\
       (void) (0 ? *(atomic) ^ (val) : 0);				\
-      (guint) __sync_fetch_and_or ((atomic), (val));			\
+      (unsigned int) __sync_fetch_and_or ((atomic), (val));			\
     }))
